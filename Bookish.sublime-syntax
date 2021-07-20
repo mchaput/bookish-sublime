@@ -1,0 +1,170 @@
+%YAML 1.2
+---
+name: Bookish wiki markup
+file_extensions: [txt, bookish]
+scope: text.bookish
+
+contexts:
+  main:
+    # Character entity
+    - match: \&\#([Xx]?[0-9a-fA-f]+)|([0-9]+);
+      scope: constant.character.escape
+      captures:
+        1: constant.numeric.hex
+        2: constant.numeric.integer
+
+    # HTML-style block comment
+    - match: <!--
+      scope: punctuation.definition.comment
+      push:
+        - meta_scope: comment.block
+        - match: -->
+          scope: punctuation.definition.comment
+          pop: true
+
+    # Line comment
+    - match: ^[ \t]*(//)(.*?)$
+      scope: comment.line
+      captures:
+        1: punctuation.definition.comment
+
+    # Code block
+    - match: \{\{\{
+      scope: punctuation.definition.raw
+      push: code_block
+
+    # Summary
+    - match: ^\"\"\"
+      push:
+        - meta_scope: string.quoted.triple
+        - match: \"\"\"
+          pop: true
+        - include: main
+
+    # Code inline
+    - match: (\`)[^`]*(\`)
+      scope: markup.raw.inline
+      captures:
+        1: punctuation.definition.raw
+        2: punctuation.definition.raw
+
+    # Bold inline
+    - match: (?<=\W)[*]
+      push:
+        - meta_scope: markup.bold
+        - match: \*((?=\W)|$)
+          pop: true
+
+    # Italic inlline
+    - match: (^|(?<=\W))_(?!_)
+      push:
+        - meta_scope: markup.italic
+        - match: (?<!_)_((?=\W)|$)
+          pop: true
+
+    # UI inline
+    - match: (^|(?<=\W))__
+      push:
+        - meta_scope: markup.bold.ui
+        - match: __((?=\W)|$)
+          pop: true
+
+    # Key
+    - match: \(\([^)]+\)\)
+      scope: markup.key
+
+    # Title
+    - match: ^[ \t]*=[ \t]*([^=]+)=*[ \t]*([(][^)]+[)][ \t]*)?$
+      scope: markup.heading.1
+      captures:
+        1: entity.name.section
+        2: entity.other.id
+
+    # Section
+    - match: ^@([-A-Za-z0-9_/]+)
+      scope: markup.heading.2
+      captures:
+        1: entity.name.section
+
+    # Heading
+    - match: ^[ \t]*(={2,})[ \t]*([^=]+)(=*)[ \t]*([(][^)]+[)][ \t]*)?$
+      scope: markup.heading.3
+      captures:
+        4: entity.name.label
+
+    # Property
+    - match: ^[ \t]*(#)([-A-Za-z0-9_/]+)([:] ?)(.*?)$
+      scope: meta.property
+      captures:
+        1: puntuation.definition.keyword
+        2: entity.other.attribute-name
+        3: punctuation.separator
+        4: entity.other.attribute-value
+
+    # Numbered list item
+    - match: ^[ \t]*(#+)
+      scope: markup.list.numbered.bullet
+
+    # Bullet list item
+    - match: ^[ \t]*([-*]+)[ ]
+      scope: markup.list.unnumbered.bullet
+
+    # Item
+    - match: ^[ \t]*(:)([-A-Za-z0-9_/]*)( [^:]*)?(:)
+      scope: entity.name.tag
+      captures:
+        3: variable.parameter
+
+    # Note/tip/warning
+    - match: ^[ \t]*(NOTE|TIP|WARNING):[ \t]*$
+      scope: keyword.other.alert
+
+    # Table cell suffix
+    - match: \|{1,2}$
+      scope: keyword.operator.table
+
+    # Link
+    - match: (\[)(([^|\]]+)(\|))?([A-Za-z0-9_]+:)?([^\]]+)(\])
+      scope: meta.link
+      captures:
+        1: punctuation.section.brackets.begin
+        3: markup.other.reference
+        4: punctuation.separator
+        5: markup.other.namespace
+        6: markup.underline.link
+        7: punctuation.section.brackets.end
+
+  code_block:
+    - meta_content_scope: markup.raw.block
+    - match: \}\}\}
+      scope: punctuation.definition.raw
+      pop: true
+    - match: \#!python\n
+      scope: entity.name.language
+      push: Packages/Python/Python.sublime-syntax
+      with_prototype:
+        - match: (?=\}\}\})
+          pop: true
+    - match: \#!javascript\n
+      push: Packages/JavaScript/JavaScript.sublime-syntax
+      scope: entity.name.language
+      with_prototype:
+        - match: (?=\}\}\})
+          pop: true
+    - match: \#!json\n
+      push: Packages/JavaScript/JSON.sublime-syntax
+      scope: entity.name.language
+      with_prototype:
+        - match: (?=\}\}\})
+          pop: true
+    - match: \#!xml\n
+      push: Packages/XML/XML.sublime-syntax
+      scope: entity.name.language
+      with_prototype:
+        - match: (?=\}\}\})
+          pop: true
+
+
+
+    
+
